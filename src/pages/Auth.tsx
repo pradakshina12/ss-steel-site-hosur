@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Spinner } from "@/components/ui/spinner";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -19,6 +20,7 @@ const Auth = () => {
   const [password, setPassword] = useState("");
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
+  const [signupSuccess, setSignupSuccess] = useState(false);
 
   // If user is already logged in, redirect to appropriate dashboard
   useEffect(() => {
@@ -35,46 +37,76 @@ const Auth = () => {
     e.preventDefault();
     setLoading(true);
     
-    // Determine user role based on email domain
-    const role = isAdminEmail(email) ? 'admin' : 'customer';
-    
-    const { error } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        data: {
-          first_name: firstName,
-          last_name: lastName,
-          role: role,
+    try {
+      // Determine user role based on email domain
+      const role = isAdminEmail(email) ? 'admin' : 'customer';
+      
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          data: {
+            first_name: firstName,
+            last_name: lastName,
+            role: role,
+          },
+          // Don't require email verification
+          emailRedirectTo: window.location.origin,
         },
-      },
-    });
+      });
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Registration successful! Please check your email to verify your account.");
-      // Redirect to home or appropriate dashboard
-      navigate("/");
+      if (error) {
+        console.error("Signup error:", error);
+        toast.error(error.message);
+      } else if (data?.user) {
+        console.log("Signup successful:", data.user);
+        toast.success("Registration successful!");
+        // Auto sign-in after signup
+        const { error: signInError } = await supabase.auth.signInWithPassword({
+          email,
+          password,
+        });
+        
+        if (signInError) {
+          console.error("Auto sign-in error:", signInError);
+          toast.error("Registration successful but could not log in automatically. Please sign in manually.");
+          setSignupSuccess(true);
+        } else {
+          // Navigate will happen through the auth state change
+          toast.success("Welcome to SS Steel!");
+        }
+      }
+    } catch (err) {
+      console.error("Unexpected error during signup:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
+    
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-    if (error) {
-      toast.error(error.message);
-    } else {
-      toast.success("Welcome back!");
-      // Will redirect in useEffect when user state updates
+      if (error) {
+        console.error("Sign-in error:", error);
+        toast.error(error.message);
+      } else {
+        toast.success("Welcome back!");
+        // Will redirect in useEffect when user state updates
+      }
+    } catch (err) {
+      console.error("Unexpected error during sign-in:", err);
+      toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
   return (
@@ -89,6 +121,14 @@ const Auth = () => {
           </CardDescription>
         </CardHeader>
         <CardContent>
+          {signupSuccess ? (
+            <Alert className="mb-4 bg-green-50 border-green-200">
+              <AlertDescription className="text-green-800">
+                Registration successful! You can now sign in with your email and password.
+              </AlertDescription>
+            </Alert>
+          ) : null}
+          
           <Tabs defaultValue="signin" className="space-y-4">
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="signin">Sign In</TabsTrigger>
@@ -118,7 +158,13 @@ const Auth = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing in..." : "Sign In"}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <Spinner size="sm" className="mr-2" /> Signing in...
+                    </span>
+                  ) : (
+                    "Sign In"
+                  )}
                 </Button>
               </form>
             </TabsContent>
@@ -175,7 +221,13 @@ const Auth = () => {
                   />
                 </div>
                 <Button type="submit" className="w-full" disabled={loading}>
-                  {loading ? "Signing up..." : "Sign Up"}
+                  {loading ? (
+                    <span className="flex items-center justify-center">
+                      <Spinner size="sm" className="mr-2" /> Signing up...
+                    </span>
+                  ) : (
+                    "Sign Up"
+                  )}
                 </Button>
               </form>
             </TabsContent>
