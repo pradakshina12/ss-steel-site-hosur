@@ -19,6 +19,7 @@ interface AuthContextType {
   isAdmin: boolean;
   isLoading: boolean;
   signOut: () => Promise<void>;
+  refreshProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -35,6 +36,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   // Fetch user profile from the database
   const fetchUserProfile = async (userId: string) => {
     try {
+      console.log("Fetching profile for user:", userId);
+      
       const { data, error } = await supabase
         .from('profiles')
         .select('*')
@@ -46,6 +49,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         return null;
       }
 
+      console.log("Profile fetched successfully:", data);
       return data as UserProfile;
     } catch (error) {
       console.error('Error in fetchUserProfile:', error);
@@ -53,8 +57,45 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     }
   };
 
+  // Function to manually refresh the user profile
+  const refreshProfile = async () => {
+    if (!user) return;
+    
+    try {
+      const userProfile = await fetchUserProfile(user.id);
+      if (userProfile) {
+        setProfile(userProfile);
+        return;
+      }
+      
+      // If profile doesn't exist, try to create it
+      console.log("Profile not found, attempting to create one");
+      const { data, error } = await supabase
+        .from('profiles')
+        .insert({
+          id: user.id,
+          first_name: user.user_metadata?.first_name || null,
+          last_name: user.user_metadata?.last_name || null,
+          role: user.email?.endsWith('@sssteelindia.com') ? 'admin' : 'customer'
+        })
+        .select()
+        .single();
+        
+      if (error) {
+        console.error('Error creating profile:', error);
+        return;
+      }
+      
+      setProfile(data as UserProfile);
+      console.log("Profile created successfully:", data);
+    } catch (error) {
+      console.error('Error in refreshProfile:', error);
+    }
+  };
+
   useEffect(() => {
     setIsLoading(true);
+    console.log("AuthProvider: Initializing auth state");
 
     // Set up auth state listener FIRST
     const { data: { subscription } } = supabase.auth.onAuthStateChange(
@@ -104,7 +145,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   return (
-    <AuthContext.Provider value={{ session, user, profile, isAdmin, isLoading, signOut }}>
+    <AuthContext.Provider value={{ session, user, profile, isAdmin, isLoading, signOut, refreshProfile }}>
       {children}
     </AuthContext.Provider>
   );
