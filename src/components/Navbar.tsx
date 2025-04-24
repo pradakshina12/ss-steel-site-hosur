@@ -1,10 +1,13 @@
+
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { Menu, X } from "lucide-react";
 import LoginDialog from "./LoginDialog";
+import { useAuth } from "@/contexts/AuthContext";
 
 const Navbar = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const { user, isAdmin } = useAuth();
 
   const toggleMenu = () => {
     setIsMenuOpen(!isMenuOpen);
@@ -17,6 +20,11 @@ const Navbar = () => {
     { name: "Enquiry", path: "/enquiry" },
     { name: "Contact", path: "/contact" },
   ];
+
+  // Add dashboard link for authenticated users
+  if (user) {
+    navLinks.push({ name: "Dashboard", path: "/dashboard" });
+  }
 
   return (
     <nav className="bg-white shadow-md sticky top-0 z-50">

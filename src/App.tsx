@@ -14,6 +14,7 @@ import Products from "./pages/Products";
 import Enquiry from "./pages/Enquiry";
 import Contact from "./pages/Contact";
 import Auth from "./pages/Auth";
+import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
 import ChatBot from "./components/ChatBot";
 
@@ -37,6 +38,7 @@ const App = () => (
                   <Route path="/enquiry" element={<Enquiry />} />
                   <Route path="/contact" element={<Contact />} />
                   <Route path="/auth" element={<Auth />} />
+                  <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </main>
