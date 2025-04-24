@@ -12,6 +12,7 @@ import Products from "./pages/Products";
 import Enquiry from "./pages/Enquiry";
 import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
+import ChatBot from "./components/ChatBot";
 
 const queryClient = new QueryClient();
 
@@ -34,6 +35,7 @@ const App = () => (
             </Routes>
           </main>
           <Footer />
+          <ChatBot />
         </div>
       </BrowserRouter>
     </TooltipProvider>
