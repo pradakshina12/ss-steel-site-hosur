@@ -1,4 +1,6 @@
 
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import {
   Dialog,
   DialogContent,
@@ -8,11 +10,29 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { LogIn } from "lucide-react";
+import { LogIn, LogOut } from "lucide-react";
 
 const LoginDialog = () => {
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const handleAuthAction = () => {
+    if (user) {
+      signOut();
+    } else {
+      navigate("/auth");
+    }
+  };
+
+  if (user) {
+    return (
+      <Button variant="outline" onClick={handleAuthAction} className="gap-2">
+        <LogOut className="h-4 w-4" />
+        Logout
+      </Button>
+    );
+  }
+
   return (
     <Dialog>
       <DialogTrigger asChild>
@@ -23,21 +43,15 @@ const LoginDialog = () => {
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
         <DialogHeader>
-          <DialogTitle>Login to Your Account</DialogTitle>
+          <DialogTitle>Welcome to SS Steel</DialogTitle>
           <DialogDescription>
-            Access your SS Steel account to manage orders and view inventory.
+            Sign in to your account to manage orders and view inventory.
           </DialogDescription>
         </DialogHeader>
         <div className="grid gap-4 py-4">
-          <div className="grid gap-2">
-            <Label htmlFor="email">Email</Label>
-            <Input id="email" type="email" placeholder="Enter your email" />
-          </div>
-          <div className="grid gap-2">
-            <Label htmlFor="password">Password</Label>
-            <Input id="password" type="password" placeholder="Enter your password" />
-          </div>
-          <Button className="w-full">Sign In</Button>
+          <Button onClick={() => navigate("/auth")} className="w-full">
+            Continue to Sign In
+          </Button>
         </div>
       </DialogContent>
     </Dialog>
