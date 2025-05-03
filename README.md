@@ -10,7 +10,7 @@ There are several ways of editing your application.
 
 **Use Lovable**
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/4227b4e2-810b-467c-b18b-d98e72b7fd9d) and start prompting.
+Simply visit the [Lovable Project](https://sssteelwebsite.netlify.app/) and start prompting.
 
 Changes made via Lovable will be committed automatically to this repo.
 
